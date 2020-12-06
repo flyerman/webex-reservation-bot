@@ -9,6 +9,10 @@ app.use(bodyParser.json());
 //app.use(express.static('images'));
 const config = require("./config.json");
 
+// contains current host reservations
+// TODO save in a file after each change and load it at startup
+var reservations = {};
+
 // init framework
 var framework = new framework(config);
 framework.start();
@@ -55,9 +59,24 @@ framework.on('spawn', (bot, id, actorId) => {
 });
 
 
-//Process incoming messages
+function sendHelp(bot) {
+  bot.say("markdown", 'These are the P4 commands I can respond to:', '\n' +
+    '**grab** HOSTNAME: will reserve HOSTNAME\n' +
+    '**list**: list the current reservations\n' +
+    '\nOther commands, unrelated to the P4 lab:\n' +
+    '**framework**   (learn more about the Webex Bot Framework) \n' +
+    '**info**  (get your personal details) \n' +
+    '**space**  (get details about this space) \n' +
+    '**card me** (a cool card!) \n' +
+    '**say hi to everyone** (everyone gets a greeting using a call to the Webex SDK) \n' +
+    '**reply** (have bot reply to your message) \n' +
+    '**help** (what you are reading now)');
+}
 
+
+//Process incoming messages
 let responded = false;
+
 /* On mention with command
 ex User enters @botname help, the bot will write back in markdown
 */
@@ -68,6 +87,50 @@ framework.hears(/help|what can i (do|say)|what (can|do) you do/i, function (bot,
     .then(() => sendHelp(bot))
     .catch((e) => console.error(`Problem in help hander: ${e.message}`));
 });
+
+
+/* The command "grab" will present the current list of reservations */
+framework.hears('grab', function (bot, trigger) {
+  console.log("someone asked for grabbing for: " + trigger.text);
+  responded = true;
+
+  let hostwanted = trigger.text.replace("grab","").trim();
+
+  let list = "";
+  let i = 0;
+  for (let host of config.hostnames) {
+    i++;
+    if (hostwanted == host || i == hostwanted) {
+      list += i.toString() + ". `"+ host + "` is reserved by " + trigger.person.displayName + " (" + trigger.person.emails[0] + ")\n";
+    } else {
+      list += i.toString() + ". `"+ host + "` is available\n";
+    }
+  }
+
+  bot.reply(trigger.message,
+    list,
+    'markdown');
+
+  //bot.sendCard(reserveCardJSON, 'your webex client does not support cards. Get a better one!');
+});
+
+/* The command list the current reservations: */
+framework.hears('list', function (bot, trigger) {
+  console.log("someone asked for list");
+  responded = true;
+
+  let list = "";
+  let i = 0;
+  for (let host of config.hostnames) {
+    i++;
+    list += i.toString() + ". `"+ host + "` is available\n";
+  }
+
+  bot.reply(trigger.message,
+    list,
+    'markdown');
+});
+
 
 /* On mention with command
 ex User enters @botname framework, the bot will write back in markdown
@@ -282,47 +345,6 @@ let reserveCardJSON =
     "version": "1.2"
 };
 
-/* The command "grab" will present the current list of reservations */
-framework.hears('grab', function (bot, trigger) {
-  console.log("someone asked for grabbing for: " + trigger.text);
-  responded = true;
-
-  let hostwanted = trigger.text.replace("grab","").trim();
-
-  let list = "";
-  let i = 0;
-  for (let host of config.hostnames) {
-    i++;
-    if (hostwanted == host || i == hostwanted) {
-      list += i.toString() + ". `"+ host + "` is reserved by " + trigger.person.displayName + " (" + trigger.person.emails[0] + ")\n";
-    } else {
-      list += i.toString() + ". `"+ host + "` is available\n";
-    }
-  }
-
-  bot.reply(trigger.message, 
-    list,
-    'markdown');
-
-  //bot.sendCard(reserveCardJSON, 'your webex client does not support cards. Get a better one!');
-});
-
-/* The command list the current reservations: */
-framework.hears('list', function (bot, trigger) {
-  console.log("someone asked for list");
-  responded = true;
-
-  let list = "";
-  let i = 0;
-  for (let host of config.hostnames) {
-    i++;
-    list += i.toString() + ". `"+ host + "` is available\n";
-  }
-
-  bot.reply(trigger.message, 
-    list,
-    'markdown');
-});
 
 
 /* On mention reply example
@@ -354,20 +376,6 @@ framework.hears(/.*/, function (bot, trigger) {
   }
   responded = false;
 });
-
-function sendHelp(bot) {
-  bot.say("markdown", 'These are the P4 commands I can respond to:', '\n' +
-    '**grab** HOSTNAME: will reserve HOSTNAME\n' +
-    '**list**: list the current reservations\n' +
-    '\nOther commands, unrelated to the P4 lab:\n' +
-    '**framework**   (learn more about the Webex Bot Framework) \n' +
-    '**info**  (get your personal details) \n' +
-    '**space**  (get details about this space) \n' +
-    '**card me** (a cool card!) \n' +
-    '**say hi to everyone** (everyone gets a greeting using a call to the Webex SDK) \n' +
-    '**reply** (have bot reply to your message) \n' +
-    '**help** (what you are reading now)');
-}
 
 
 //Server config & housekeeping
