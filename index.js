@@ -61,7 +61,8 @@ framework.on('spawn', (bot, id, actorId) => {
 
 function sendHelp(bot) {
   bot.say("markdown", 'These are the P4 commands I can respond to:', '\n' +
-    '**grab** HOSTNAME: will reserve HOSTNAME\n' +
+    '**grab** HOSTNAME: will reserve HOSTNAME.  You can also use the host number from the list command.\n' +
+    '**release** HOSTNAME: will release HOSTNAME.  You can also use the host number from the list command.\n' +
     '**list**: list the current reservations\n' +
     '\nOther commands, unrelated to the P4 lab:\n' +
     '**framework**   (learn more about the Webex Bot Framework) \n' +
@@ -91,7 +92,7 @@ framework.hears(/help|what can i (do|say)|what (can|do) you do/i, function (bot,
 
 /* The command "grab" will present the current list of reservations */
 framework.hears('grab', function (bot, trigger) {
-  console.log("someone asked for grabbing for: " + trigger.text);
+  console.log("someone asked for : " + trigger.text);
   responded = true;
 
   let hostwanted = trigger.text.replace("grab","").trim();
@@ -129,6 +130,40 @@ framework.hears('grab', function (bot, trigger) {
   bot.reply(trigger.message,
             "❌ Could not find host `" + hostwanted + "`",
             'markdown');
+});
+
+
+/* The command "grab" will present the current list of reservations */
+framework.hears('release', function (bot, trigger) {
+  console.log("someone asked for: " + trigger.text);
+  responded = true;
+
+  let hostwanted = trigger.text.replace("release","").trim();
+
+  // Check if the machine is reserved
+  let i = 0;
+  for (let host of config.hostnames) {
+    i++;
+    if (i == hostwanted) {
+      hostwanted = host;
+      break;
+    }
+  }
+  if (hostwanted in reservations) {
+    delete reservations[hostwanted];
+    bot.reply(trigger.message,
+              "✅ `" + hostwanted + "` was made available again",
+              'markdown');
+  } else if (config.hostnames.includes(hostwanted)) {
+    bot.reply(trigger.message,
+              "✅ `" + hostwanted + "` is already available",
+              'markdown');
+  } else {
+    bot.reply(trigger.message,
+              "❌ Could not find host `" + hostwanted + "`",
+              'markdown');
+
+  }
 });
 
 
