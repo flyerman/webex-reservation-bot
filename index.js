@@ -190,6 +190,141 @@ framework.hears('card me', function (bot, trigger) {
   bot.sendCard(cardJSON, 'This is customizable fallback text for clients that do not support buttons & cards');
 });
 
+// Reserve card
+let reserveCardJSON =
+{
+    "type": "AdaptiveCard",
+    "body": [
+        {
+            "type": "ColumnSet",
+            "columns": [
+                {
+                    "type": "Column",
+                    "items": [
+                        {
+                            "type": "Image",
+                            "style": "Person",
+                            "url": "https://developer.webex.com/images/webex-teams-logo.png",
+                            "size": "Medium",
+                            "height": "50px"
+                        }
+                    ],
+                    "width": "auto"
+                },
+                {
+                    "type": "Column",
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": "P4 Lab Reservations",
+                            "weight": "Lighter",
+                            "color": "Accent"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "weight": "Bolder",
+                            "text": "Select a machine to reserve:",
+                            "horizontalAlignment": "Left",
+                            "wrap": true,
+                            "color": "Light",
+                            "size": "Large",
+                            "spacing": "Small"
+                        }
+                    ],
+                    "width": "stretch"
+                }
+            ]
+        },
+        {
+            "type": "ActionSet",
+            "actions": [
+                {
+                    "type": "Action.Submit",
+                    "title": "Reserve atlas-gen3-3",
+                    "data": {
+                        "hostname": "atlas-gen3-3"
+                    }
+                }
+            ],
+            "horizontalAlignment": "Left",
+            "spacing": "None"
+        },
+        {
+            "type": "ActionSet",
+            "actions": [
+                {
+                    "type": "Action.Submit",
+                    "title": "Reserve atlas-gen3-4",
+                    "data": {
+                        "hostname": "atlas-gen3-4"
+                    }
+                }
+            ],
+            "horizontalAlignment": "Left",
+            "spacing": "None"
+        },
+        {
+            "type": "ActionSet",
+            "actions": [
+                {
+                    "type": "Action.Submit",
+                    "title": "Reserve athenalb1-elarch2",
+                    "data": {
+                        "hostname": "athenalb1-elarch2"
+                    }
+                }
+            ],
+            "horizontalAlignment": "Left",
+            "spacing": "None"
+        }
+    ],
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "version": "1.2"
+};
+
+/* The command "grab" will present the current list of reservations */
+framework.hears('grab', function (bot, trigger) {
+  console.log("someone asked for grabbing for: " + trigger.text);
+  responded = true;
+
+  let hostwanted = trigger.text.replace("grab","").trim();
+
+  let list = "";
+  let i = 0;
+  for (let host of config.hostnames) {
+    i++;
+    if (hostwanted == host || i == hostwanted) {
+      list += i.toString() + ". `"+ host + "` is reserved by " + trigger.person.displayName + " (" + trigger.person.emails[0] + ")\n";
+    } else {
+      list += i.toString() + ". `"+ host + "` is available\n";
+    }
+  }
+
+  bot.reply(trigger.message, 
+    list,
+    'markdown');
+
+  //bot.sendCard(reserveCardJSON, 'your webex client does not support cards. Get a better one!');
+});
+
+/* The command list the current reservations: */
+framework.hears('list', function (bot, trigger) {
+  console.log("someone asked for list");
+  responded = true;
+
+  let list = "";
+  let i = 0;
+  for (let host of config.hostnames) {
+    i++;
+    list += i.toString() + ". `"+ host + "` is available\n";
+  }
+
+  bot.reply(trigger.message, 
+    list,
+    'markdown');
+});
+
+
 /* On mention reply example
 ex User enters @botname 'reply' phrase, the bot will post a threaded reply
 */
@@ -221,14 +356,17 @@ framework.hears(/.*/, function (bot, trigger) {
 });
 
 function sendHelp(bot) {
-  bot.say("markdown", 'These are the commands I can respond to:', '\n\n ' +
-    '1. **framework**   (learn more about the Webex Bot Framework) \n' +
-    '2. **info**  (get your personal details) \n' +
-    '3. **space**  (get details about this space) \n' +
-    '4. **card me** (a cool card!) \n' +
-    '5. **say hi to everyone** (everyone gets a greeting using a call to the Webex SDK) \n' +
-    '6. **reply** (have bot reply to your message) \n' +
-    '7. **help** (what you are reading now)');
+  bot.say("markdown", 'These are the P4 commands I can respond to:', '\n' +
+    '**grab** HOSTNAME: will reserve HOSTNAME\n' +
+    '**list**: list the current reservations\n' +
+    '\nOther commands, unrelated to the P4 lab:\n' +
+    '**framework**   (learn more about the Webex Bot Framework) \n' +
+    '**info**  (get your personal details) \n' +
+    '**space**  (get details about this space) \n' +
+    '**card me** (a cool card!) \n' +
+    '**say hi to everyone** (everyone gets a greeting using a call to the Webex SDK) \n' +
+    '**reply** (have bot reply to your message) \n' +
+    '**help** (what you are reading now)');
 }
 
 
