@@ -96,23 +96,41 @@ framework.hears('grab', function (bot, trigger) {
 
   let hostwanted = trigger.text.replace("grab","").trim();
 
-  let list = "";
+  // Check if the machine is already reserved
   let i = 0;
+  for (let host of config.hostnames) {
+    i++;
+    if (i == hostwanted) {
+      hostwanted = host;
+      break;
+    }
+  }
+  if (hostwanted in reservations) {
+      bot.reply(trigger.message,
+                "❌ `" + hostwanted + "` is already reserved by " + reservations[hostwanted].displayName + " (" + reservations[hostwanted].emails[0] + ")",
+                'markdown');
+      return;
+  }
+
+  let list = "";
+  i = 0;
   for (let host of config.hostnames) {
     i++;
     if (hostwanted == host || i == hostwanted) {
       list += i.toString() + ". `"+ host + "` is reserved by " + trigger.person.displayName + " (" + trigger.person.emails[0] + ")\n";
-    } else {
-      list += i.toString() + ". `"+ host + "` is available\n";
+      reservations[host] = trigger.person; 
+      bot.reply(trigger.message,
+                "✅ `" + host + "` is now reserved by " + trigger.person.displayName + " (" + trigger.person.emails[0] + ")\n",
+                'markdown');
+      return;
     }
   }
 
   bot.reply(trigger.message,
-    list,
-    'markdown');
-
-  //bot.sendCard(reserveCardJSON, 'your webex client does not support cards. Get a better one!');
+            "❌ Could not find host `" + hostwanted + "`",
+            'markdown');
 });
+
 
 /* The command list the current reservations: */
 framework.hears('list', function (bot, trigger) {
@@ -123,7 +141,12 @@ framework.hears('list', function (bot, trigger) {
   let i = 0;
   for (let host of config.hostnames) {
     i++;
-    list += i.toString() + ". `"+ host + "` is available\n";
+    list += i.toString() + ". `"+ host + "` is ";
+    if (host in reservations) {
+      list += "reserved by " + reservations[host].displayName + " (" + reservations[host].emails[0] + ")\n";
+    } else {
+      list += "is available\n";
+    }
   }
 
   bot.reply(trigger.message,
