@@ -1,5 +1,10 @@
 {
   "webhookUrl": "https://bot.example.com",
   "token": "SKDJFSJDFKSKDJFKJSDFKJSDFJKDSJFJDSFJSDKFJKSDJFKSJDFKJSDKFJSDJFSDJFSDJFLKJSDFKJDSLKFJLKSDJFKSJFKSDJFLKSDJFK",
-  "port": 443
+  "port": 443,
+  "hostnames": [
+     "atlas-gen3-3",
+     "atlas-gen3-4",
+     "athenalb1-elarch2"
+  ]
 }
