@@ -63,7 +63,9 @@ function sendHelp(bot) {
   bot.say("markdown", 'These are the P4 commands I can respond to:', '\n' +
     '**grab** HOSTNAME: will reserve HOSTNAME.  You can also use the host number from the list command.\n' +
     '**release** HOSTNAME: will release HOSTNAME.  You can also use the host number from the list command.\n' +
-    '**list**: list the current reservations\n' +
+    '**register** HOSTNAME: will add HOSTNAME to the list.\n' +
+    '**unregister** HOSTNAME: will remove HOSTNAME from the list.  You can also use the host number from the list command.\n' +
+    '**list**: list the P4 machines and their reservations\n' +
     '\nOther commands, unrelated to the P4 lab:\n' +
     '**framework**   (learn more about the Webex Bot Framework) \n' +
     '**info**  (get your personal details) \n' +
@@ -133,7 +135,7 @@ framework.hears('grab', function (bot, trigger) {
 });
 
 
-/* The command "grab" will present the current list of reservations */
+/* The command "release" will remove a reservation */
 framework.hears('release', function (bot, trigger) {
   console.log("someone asked for: " + trigger.text);
   responded = true;
@@ -163,6 +165,59 @@ framework.hears('release', function (bot, trigger) {
               "❌ Could not find host `" + hostwanted + "`",
               'markdown');
 
+  }
+});
+
+
+/* The command "register" will add a new host */
+framework.hears('register', function (bot, trigger) {
+  console.log("someone asked for: " + trigger.text);
+  responded = true;
+
+  let hostwanted = trigger.text.replace("register","").trim();
+
+  // Check if the machine already exists
+  if (config.hostnames.includes(hostwanted)) {
+    bot.reply(trigger.message,
+              "❌ `" + hostwanted + "` is already in the list",
+              'markdown');
+  } else {
+    config.hostnames.push(hostwanted);
+    bot.reply(trigger.message,
+              "✅ `" + hostwanted + "` was added to the list",
+              'markdown');
+  }
+});
+
+
+/* The command "unregister" will remove a host */
+framework.hears('unregister', function (bot, trigger) {
+  console.log("someone asked for: " + trigger.text);
+  responded = true;
+
+  let hostwanted = trigger.text.replace("unregister","").trim();
+
+  let i = 0;
+  for (let host of config.hostnames) {
+    i++;
+    if (i == hostwanted) {
+      hostwanted = host;
+      break;
+    }
+  }
+
+  if (config.hostnames.includes(hostwanted)) {
+    config.hostnames = config.hostnames.filter(item => item !== hostwanted);
+    if (hostwanted in reservations) {
+        delete reservations[hostwanted];
+    }
+    bot.reply(trigger.message,
+              "✅ `" + hostwanted + "` was removed from the list",
+              'markdown');
+  } else {
+    bot.reply(trigger.message,
+              "❌ Could not find host `" + hostwanted + "`",
+              'markdown');
   }
 });
 
