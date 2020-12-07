@@ -97,7 +97,7 @@ framework.hears('grab', function (bot, trigger) {
   console.log("someone asked for : " + trigger.text);
   responded = true;
 
-  let hostwanted = trigger.text.replace("grab","").trim();
+  let hostwanted = trigger.text.trim().split(" ").splice(-1);
 
   // Check if the machine is already reserved
   let i = 0;
@@ -140,7 +140,7 @@ framework.hears('release', function (bot, trigger) {
   console.log("someone asked for: " + trigger.text);
   responded = true;
 
-  let hostwanted = trigger.text.replace("release","").trim();
+  let hostwanted = trigger.text.trim().split(" ").splice(-1);
 
   // Check if the machine is reserved
   let i = 0;
@@ -174,7 +174,7 @@ framework.hears('register', function (bot, trigger) {
   console.log("someone asked for: " + trigger.text);
   responded = true;
 
-  let hostwanted = trigger.text.replace("register","").trim();
+  let hostwanted = trigger.text.trim().split(" ").splice(-1);
 
   // Check if the machine already exists
   if (config.hostnames.includes(hostwanted)) {
@@ -195,7 +195,7 @@ framework.hears('unregister', function (bot, trigger) {
   console.log("someone asked for: " + trigger.text);
   responded = true;
 
-  let hostwanted = trigger.text.replace("unregister","").trim();
+  let hostwanted = trigger.text.trim().split(" ").splice(-1);
 
   let i = 0;
   for (let host of config.hostnames) {
@@ -235,7 +235,7 @@ framework.hears('list', function (bot, trigger) {
     if (host in reservations) {
       list += "reserved by " + reservations[host].displayName + " (" + reservations[host].emails[0] + ")\n";
     } else {
-      list += "is available\n";
+      list += "available\n";
     }
   }
 
