@@ -352,15 +352,12 @@ let reserveButton =
     ]
 };
 
-/* The command menu sends back a card with buttons to grab and release: */
-framework.hears('menu', function (bot, trigger) {
-  console.log("someone asked for the menu");
-  responded = true;
 
-  let avatar = trigger.person.avatar;
+function sendCard(bot, trigger) {
 
   let card = JSON.parse(JSON.stringify(reserveCardJSON));
 
+  let avatar = trigger.person.avatar;
   if (avatar) {
       card.body[0].columns[0].items[0].url = avatar;
   } else {
@@ -387,6 +384,15 @@ framework.hears('menu', function (bot, trigger) {
   }
 
   bot.sendCard(card, 'Your webex client does not support ActiveCard. Get a new one!');
+}
+
+
+/* The command menu sends back a card with buttons to grab and release: */
+framework.hears('menu', function (bot, trigger) {
+  console.log("someone asked for the menu");
+  responded = true;
+
+  sendCard(bot, trigger);
 });
 
 
@@ -404,11 +410,13 @@ framework.on('attachmentAction', function (bot, trigger) {
 
   if (payload.inputs["action"] == "release") {
     releaseHost(bot, trigger, payload.inputs["hostname"]);
+    sendCard(bot, trigger);
     return;
   }
 
   if (payload.inputs["action"] == "grab") {
     grabHost(bot, trigger, payload.inputs["hostname"]);
+    sendCard(bot, trigger);
     return;
   }
 
