@@ -41,10 +41,10 @@ framework.on('spawn', (bot, id, actorId) => {
     // Lets find out more about them..
     var msg = 'You can say `help` to get the list of words I am able to respond to.';
     bot.webex.people.get(actorId).then((user) => {
-      msg = `Hello there ${user.displayName}. ${msg}`; 
+      msg = `Hello there ${user.displayName}. ${msg}`;
     }).catch((e) => {
       console.error(`Failed to lookup user details in framwork.on("spawn"): ${e.message}`);
-      msg = `Hello there. ${msg}`;  
+      msg = `Hello there. ${msg}`;
     }).finally(() => {
       // Say hello, and tell users what you do!
       if (bot.isDirect) {
@@ -125,7 +125,7 @@ function grabHost(bot, trigger, hostwanted) {
     i++;
     if (hostwanted == host || i == hostwanted) {
       list += i.toString() + ". `"+ host + "` is reserved by " + trigger.person.displayName + " (" + trigger.person.emails[0] + ")\n";
-      reservations[host] = trigger.person; 
+      reservations[host] = trigger.person;
       botReply(bot,
                trigger.message,
                "✅ `" + host + "` is now reserved by " + trigger.person.displayName + " (" + trigger.person.emails[0] + ")\n");
@@ -133,7 +133,7 @@ function grabHost(bot, trigger, hostwanted) {
     }
   }
 
-  botReply(bot, trigger.message, "❌ Could not find host `" + hostwanted + "`");  
+  botReply(bot, trigger.message, "❌ Could not find host `" + hostwanted + "`");
 }
 
 
@@ -172,7 +172,7 @@ function releaseHost(bot, trigger, hostwanted) {
     botReply(bot,
              trigger.message,
              "❌ Could not find host `" + hostwanted + "`");
-  }  
+  }
 }
 
 /* The command "release" will remove a reservation */
@@ -410,7 +410,7 @@ framework.on('attachmentAction', function (bot, trigger) {
     releaseHost(bot, trigger, payload.inputs["hostname"]);
     return;
   }
-  
+
   if (payload.inputs["action"] == "grab") {
     grabHost(bot, trigger, payload.inputs["hostname"]);
     return;
@@ -443,7 +443,7 @@ framework.hears('info', function (bot, trigger) {
   bot.say("markdown", outputString);
 });
 
-/* On mention with bot data 
+/* On mention with bot data
 ex User enters @botname 'space' phrase, the bot will provide details about that particular space
 */
 framework.hears('space', function (bot) {
@@ -461,7 +461,7 @@ framework.hears('space', function (bot) {
 
 });
 
-/* 
+/*
    Say hi to every member in the space
    This demonstrates how developers can access the webex
    sdk to call any Webex API.  API Doc: https://webex.github.io/webex-js-sdk/api/
@@ -548,7 +548,7 @@ ex User enters @botname 'reply' phrase, the bot will post a threaded reply
 framework.hears('reply', function (bot, trigger) {
   console.log("someone asked for a reply.  We will give them two.");
   responded = true;
-  bot.reply(trigger.message, 
+  bot.reply(trigger.message,
     'This is threaded reply sent using the `bot.reply()` method.',
     'markdown');
   var msg_attach = {
