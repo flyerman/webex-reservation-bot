@@ -8,11 +8,18 @@ var bodyParser = require('body-parser');
 var app = express();
 app.use(bodyParser.json());
 
-const config = require("./config.json");
+const fs = require('fs')
 
-// contains current host reservations
-// TODO save in a file after each change and load it at startup
-var reservations = {};
+let configFile = "./config.json";
+const config = require(configFile);
+
+const storeConfig = () => {
+  try {
+    fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
+  } catch (err) {
+    console.error(err)
+  }
+}
 
 // init framework
 var framework = new framework(config);
@@ -108,10 +115,10 @@ function grabHost(bot, trigger, hostwanted) {
       break;
     }
   }
-  if (hostwanted in reservations) {
+  if (hostwanted in config.reservations) {
     botReply(bot,
              trigger.message,
-             "❌ `" + hostwanted + "` is already reserved by " + reservations[hostwanted].displayName + " (" + reservations[hostwanted].emails[0] + ")");
+             "❌ `" + hostwanted + "` is already reserved by " + config.reservations[hostwanted].displayName + " (" + config.reservations[hostwanted].emails[0] + ")");
     return;
   }
 
@@ -121,7 +128,8 @@ function grabHost(bot, trigger, hostwanted) {
     i++;
     if (hostwanted == host || i == hostwanted) {
       list += i.toString() + ". `"+ host + "` is reserved by " + trigger.person.displayName + " (" + trigger.person.emails[0] + ")\n";
-      reservations[host] = trigger.person;
+      config.reservations[host] = trigger.person;
+      storeConfig();
       botReply(bot,
                trigger.message,
                "✅ `" + host + "` is now reserved by " + trigger.person.displayName + " (" + trigger.person.emails[0] + ")\n");
@@ -155,8 +163,9 @@ function releaseHost(bot, trigger, hostwanted) {
       break;
     }
   }
-  if (hostwanted in reservations) {
-    delete reservations[hostwanted];
+  if (hostwanted in config.reservations) {
+    delete config.reservations[hostwanted];
+    storeConfig();
     botReply(bot,
              trigger.message,
              "✅ `" + hostwanted + "` was made available again");
@@ -221,8 +230,9 @@ framework.hears('unregister', function (bot, trigger) {
 
   if (config.hostnames.includes(hostwanted)) {
     config.hostnames = config.hostnames.filter(item => item !== hostwanted);
-    if (hostwanted in reservations) {
-        delete reservations[hostwanted];
+    if (hostwanted in config.reservations) {
+        delete config.reservations[hostwanted];
+        storeConfig();
     }
     bot.reply(trigger.message,
               "✅ `" + hostwanted + "` was removed from the list",
@@ -245,8 +255,8 @@ framework.hears('list', function (bot, trigger) {
   for (let host of config.hostnames) {
     i++;
     list += i.toString() + ". `"+ host + "` is ";
-    if (host in reservations) {
-      list += "reserved by " + reservations[host].displayName + " (" + reservations[host].emails[0] + ")\n";
+    if (host in config.reservations) {
+      list += "reserved by " + config.reservations[host].displayName + " (" + config.reservations[host].emails[0] + ")\n";
     } else {
       list += "available\n";
     }
@@ -367,12 +377,12 @@ function sendCard(bot, trigger) {
   for (let host of config.hostnames) {
     let button = JSON.parse(JSON.stringify(reserveButton));
     button.columns[0].items[0].actions[0].data["hostname"] = host;
-    if (host in reservations) {
+    if (host in config.reservations) {
       button.columns[0].items[0].actions[0].data["action"] = "release";
       button.columns[0].items[0].actions[0].title = "release";
       button.columns[0].items[0].actions[0].style = "destructive";
       button.columns[1].items[0].color = "Attention";
-      button.columns[1].items[0].text = host + " is reserved by " + reservations[host].displayName + " (" + reservations[host].emails[0] + ")";
+      button.columns[1].items[0].text = host + " is reserved by " + config.reservations[host].displayName + " (" + config.reservations[host].emails[0] + ")";
     } else {
       button.columns[0].items[0].actions[0].data["action"] = "grab";
       button.columns[0].items[0].actions[0].title = "grab";
