@@ -61,6 +61,7 @@ framework.on('spawn', (bot, id, actorId) => {
 
 function sendHelp(bot) {
   bot.say("markdown", 'These are the P4 commands I can respond to:', '\n' +
+    '**menu**: (WIP) present a card with buttons to reserve or release  a host.\n' +
     '**grab** HOSTNAME: will reserve HOSTNAME.  You can also use the host number from the list command.\n' +
     '**release** HOSTNAME: will release HOSTNAME.  You can also use the host number from the list command.\n' +
     '**register** HOSTNAME: will add HOSTNAME to the list.\n' +
@@ -92,13 +93,16 @@ framework.hears(/help|what can i (do|say)|what (can|do) you do/i, function (bot,
 });
 
 
-/* The command "grab" will present the current list of reservations */
-framework.hears('grab', function (bot, trigger) {
-  console.log("someone asked for : " + trigger.text);
-  responded = true;
+function botReply(bot, origmessage, replymessage) {
+  if (origmessage) {
+    bot.reply(origmessage, replymessage, 'markdown');
+  } else {
+    bot.say(replymessage);
+  }
+}
 
-  let hostwanted = trigger.text.trim().split(" ").splice(-1)[0];
 
+function grabHost(bot, trigger, hostwanted) {
   // Check if the machine is already reserved
   let i = 0;
   for (let host of config.hostnames) {
@@ -109,10 +113,10 @@ framework.hears('grab', function (bot, trigger) {
     }
   }
   if (hostwanted in reservations) {
-      bot.reply(trigger.message,
-                "❌ `" + hostwanted + "` is already reserved by " + reservations[hostwanted].displayName + " (" + reservations[hostwanted].emails[0] + ")",
-                'markdown');
-      return;
+    botReply(bot,
+             trigger.message,
+             "❌ `" + hostwanted + "` is already reserved by " + reservations[hostwanted].displayName + " (" + reservations[hostwanted].emails[0] + ")");
+    return;
   }
 
   let list = "";
@@ -122,25 +126,29 @@ framework.hears('grab', function (bot, trigger) {
     if (hostwanted == host || i == hostwanted) {
       list += i.toString() + ". `"+ host + "` is reserved by " + trigger.person.displayName + " (" + trigger.person.emails[0] + ")\n";
       reservations[host] = trigger.person; 
-      bot.reply(trigger.message,
-                "✅ `" + host + "` is now reserved by " + trigger.person.displayName + " (" + trigger.person.emails[0] + ")\n",
-                'markdown');
+      botReply(bot,
+               trigger.message,
+               "✅ `" + host + "` is now reserved by " + trigger.person.displayName + " (" + trigger.person.emails[0] + ")\n");
       return;
     }
   }
 
-  bot.reply(trigger.message,
-            "❌ Could not find host `" + hostwanted + "`",
-            'markdown');
-});
+  botReply(bot, trigger.message, "❌ Could not find host `" + hostwanted + "`");  
+}
 
 
-/* The command "release" will remove a reservation */
-framework.hears('release', function (bot, trigger) {
-  console.log("someone asked for: " + trigger.text);
+/* The command "grab" will present the current list of reservations */
+framework.hears('grab', function (bot, trigger) {
+  console.log("someone asked for : " + trigger.text);
   responded = true;
 
   let hostwanted = trigger.text.trim().split(" ").splice(-1)[0];
+
+  grabHost(bot, trigger, hostwanted);
+});
+
+
+function releaseHost(bot, trigger, hostwanted) {
 
   // Check if the machine is reserved
   let i = 0;
@@ -153,19 +161,28 @@ framework.hears('release', function (bot, trigger) {
   }
   if (hostwanted in reservations) {
     delete reservations[hostwanted];
-    bot.reply(trigger.message,
-              "✅ `" + hostwanted + "` was made available again",
-              'markdown');
+    botReply(bot,
+             trigger.message,
+             "✅ `" + hostwanted + "` was made available again");
   } else if (config.hostnames.includes(hostwanted)) {
-    bot.reply(trigger.message,
-              "✅ `" + hostwanted + "` is already available",
-              'markdown');
+    botReply(bot,
+             trigger.message,
+             "✅ `" + hostwanted + "` is already available");
   } else {
-    bot.reply(trigger.message,
-              "❌ Could not find host `" + hostwanted + "`",
-              'markdown');
+    botReply(bot,
+             trigger.message,
+             "❌ Could not find host `" + hostwanted + "`");
+  }  
+}
 
-  }
+/* The command "release" will remove a reservation */
+framework.hears('release', function (bot, trigger) {
+  console.log("someone asked for: " + trigger.text);
+  responded = true;
+
+  let hostwanted = trigger.text.trim().split(" ").splice(-1)[0];
+
+  releaseHost(bot, trigger, hostwanted);
 });
 
 
@@ -242,6 +259,164 @@ framework.hears('list', function (bot, trigger) {
   bot.reply(trigger.message,
     list,
     'markdown');
+});
+
+
+// Reserve card
+let reserveCardJSON =
+{
+    "type": "AdaptiveCard",
+    "body": [
+        {
+            "type": "ColumnSet",
+            "columns": [
+                {
+                    "type": "Column",
+                    "items": [
+                        {
+                            "type": "Image",
+                            "style": "Person",
+                            "url": "https://developer.webex.com/images/webex-teams-logo.png",
+                            "size": "Medium",
+                            "height": "50px"
+                        }
+                    ],
+                    "width": "auto"
+                },
+                {
+                    "type": "Column",
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": "P4 Lab Menu",
+                            "weight": "Lighter",
+                            "color": "Accent"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "weight": "Bolder",
+                            "text": "¿ what can I do for you ?",
+                            "horizontalAlignment": "Left",
+                            "wrap": true,
+                            "color": "Light",
+                            "size": "Large",
+                            "spacing": "Small"
+                        }
+                    ],
+                    "width": "stretch"
+                }
+            ]
+        }
+    ],
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "version": "1.2"
+};
+
+let reserveButton =
+{
+    "type": "ColumnSet",
+    "columns": [
+        {
+            "type": "Column",
+            "items": [
+                {
+                    "type": "ActionSet",
+                    "actions": [
+                        {
+                            "type": "Action.Submit",
+                            "title": "N/A",
+                            "style": "positive",
+                            "data": {
+                                "action": "N/A",
+                                "hostname": "N/A"
+                            }
+                        }
+                    ],
+                    "horizontalAlignment": "Left",
+                    "spacing": "None"
+                }
+            ],
+            "width": "auto",
+            "verticalContentAlignment": "Center"
+        },
+        {
+            "type": "Column",
+            "items": [
+                {
+                    "type": "TextBlock",
+                    "text": "atlas-gen3-3",
+                    "horizontalAlignment": "Left",
+                    "color": "Attention",
+                    "wrap": true
+                }
+            ],
+            "width": "stretch",
+            "verticalContentAlignment": "Bottom"
+        }
+    ]
+};
+
+/* The command menu sends back a card with buttons to grab and release: */
+framework.hears('menu', function (bot, trigger) {
+  console.log("someone asked for the menu");
+  responded = true;
+
+  let avatar = trigger.person.avatar;
+
+  let card = JSON.parse(JSON.stringify(reserveCardJSON));
+
+  if (avatar) {
+      card.body[0].columns[0].items[0].url = avatar;
+  } else {
+      card.body[0].columns[0].items[0].url = "https://developer.webex.com/images/webex-teams-logo.png";
+  }
+
+  for (let host of config.hostnames) {
+    let button = JSON.parse(JSON.stringify(reserveButton));
+    button.columns[0].items[0].actions[0].data["hostname"] = host;
+    if (host in reservations) {
+      button.columns[0].items[0].actions[0].data["action"] = "release";
+      button.columns[0].items[0].actions[0].title = "release";
+      button.columns[0].items[0].actions[0].style = "destructive";
+      button.columns[1].items[0].color = "Attention";
+      button.columns[1].items[0].text = host + " is reserved by " + reservations[host].displayName + " (" + reservations[host].emails[0] + ")";
+    } else {
+      button.columns[0].items[0].actions[0].data["action"] = "grab";
+      button.columns[0].items[0].actions[0].title = "grab";
+      button.columns[0].items[0].actions[0].style = "positive";
+      button.columns[1].items[0].color = "Good";
+      button.columns[1].items[0].text = host;
+    }
+    card.body.push(button);
+  }
+
+  bot.sendCard(card, 'Your webex client does not support ActiveCard. Get a new one!');
+});
+
+
+// Process a submitted card
+framework.on('attachmentAction', function (bot, trigger) {
+
+  //bot.say(`Got an attachmentAction:\n${JSON.stringify(trigger, null, 2)}`);
+
+  let payload = JSON.parse(JSON.stringify(trigger.attachmentAction));
+
+  if (payload.type != "submit") {
+    bot.say(`Unknown payload type '${payload.type}'`);
+    return;
+  }
+
+  if (payload.inputs["action"] == "release") {
+    releaseHost(bot, trigger, payload.inputs["hostname"]);
+    return;
+  }
+  
+  if (payload.inputs["action"] == "grab") {
+    grabHost(bot, trigger, payload.inputs["hostname"]);
+    return;
+  }
+
+  bot.say(`Unknown payload action '${payload.inputs["action"]}'`);
 });
 
 
@@ -365,99 +540,6 @@ framework.hears('card me', function (bot, trigger) {
   cardJSON.body[0].columns[0].items[2].text = trigger.person.emails[0];
   bot.sendCard(cardJSON, 'This is customizable fallback text for clients that do not support buttons & cards');
 });
-
-// Reserve card
-let reserveCardJSON =
-{
-    "type": "AdaptiveCard",
-    "body": [
-        {
-            "type": "ColumnSet",
-            "columns": [
-                {
-                    "type": "Column",
-                    "items": [
-                        {
-                            "type": "Image",
-                            "style": "Person",
-                            "url": "https://developer.webex.com/images/webex-teams-logo.png",
-                            "size": "Medium",
-                            "height": "50px"
-                        }
-                    ],
-                    "width": "auto"
-                },
-                {
-                    "type": "Column",
-                    "items": [
-                        {
-                            "type": "TextBlock",
-                            "text": "P4 Lab Reservations",
-                            "weight": "Lighter",
-                            "color": "Accent"
-                        },
-                        {
-                            "type": "TextBlock",
-                            "weight": "Bolder",
-                            "text": "Select a machine to reserve:",
-                            "horizontalAlignment": "Left",
-                            "wrap": true,
-                            "color": "Light",
-                            "size": "Large",
-                            "spacing": "Small"
-                        }
-                    ],
-                    "width": "stretch"
-                }
-            ]
-        },
-        {
-            "type": "ActionSet",
-            "actions": [
-                {
-                    "type": "Action.Submit",
-                    "title": "Reserve atlas-gen3-3",
-                    "data": {
-                        "hostname": "atlas-gen3-3"
-                    }
-                }
-            ],
-            "horizontalAlignment": "Left",
-            "spacing": "None"
-        },
-        {
-            "type": "ActionSet",
-            "actions": [
-                {
-                    "type": "Action.Submit",
-                    "title": "Reserve atlas-gen3-4",
-                    "data": {
-                        "hostname": "atlas-gen3-4"
-                    }
-                }
-            ],
-            "horizontalAlignment": "Left",
-            "spacing": "None"
-        },
-        {
-            "type": "ActionSet",
-            "actions": [
-                {
-                    "type": "Action.Submit",
-                    "title": "Reserve athenalb1-elarch2",
-                    "data": {
-                        "hostname": "athenalb1-elarch2"
-                    }
-                }
-            ],
-            "horizontalAlignment": "Left",
-            "spacing": "None"
-        }
-    ],
-    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-    "version": "1.2"
-};
-
 
 
 /* On mention reply example
