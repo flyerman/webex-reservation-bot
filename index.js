@@ -304,26 +304,15 @@ let reserveButton =
             "type": "Column",
             "items": [
                 {
-                    "type": "TextBlock",
-                    "text": "atlas-gen3-3",
-                    "horizontalAlignment": "Left",
-                    "wrap": true
-                }
-            ],
-            "width": "auto"
-        },
-        {
-            "type": "Column",
-            "items": [
-                {
                     "type": "ActionSet",
                     "actions": [
                         {
                             "type": "Action.Submit",
-                            "title": "Reserve",
+                            "title": "N/A",
+                            "style": "positive",
                             "data": {
-                                "action": "reserve",
-                                "hostname": "atlas-gen3-3"
+                                "action": "N/A",
+                                "hostname": "N/A"
                             }
                         }
                     ],
@@ -331,7 +320,22 @@ let reserveButton =
                     "spacing": "None"
                 }
             ],
-            "width": "stretch"
+            "width": "auto",
+            "verticalContentAlignment": "Center"
+        },
+        {
+            "type": "Column",
+            "items": [
+                {
+                    "type": "TextBlock",
+                    "text": "atlas-gen3-3",
+                    "horizontalAlignment": "Left",
+                    "color": "Attention",
+                    "wrap": true
+                }
+            ],
+            "width": "stretch",
+            "verticalContentAlignment": "Bottom"
         }
     ]
 };
@@ -343,7 +347,7 @@ framework.hears('menu', function (bot, trigger) {
 
   let avatar = trigger.person.avatar;
 
-  let card = reserveCardJSON;
+  let card = JSON.parse(JSON.stringify(reserveCardJSON));
 
   if (avatar) {
       card.body[0].columns[0].items[0].url = avatar;
@@ -352,10 +356,21 @@ framework.hears('menu', function (bot, trigger) {
   }
 
   for (let host of config.hostnames) {
-    let button = reserveButton;
-    button.columns[0].items[0].text = host;
-    button.columns[1].items[0].actions[0].data["action"] = (host in reservations) ? "Release" : "Grab";
-    button.columns[1].items[0].actions[0].data["hostname"] = host;
+    let button = JSON.parse(JSON.stringify(reserveButton));
+    button.columns[0].items[0].actions[0].data["hostname"] = host;
+    if (host in reservations) {
+      button.columns[0].items[0].actions[0].data["action"] = "release";
+      button.columns[0].items[0].actions[0].title = "release";
+      button.columns[0].items[0].actions[0].style = "destructive";
+      button.columns[1].items[0].color = "Attention";
+      button.columns[1].items[0].text = host + " is reserved by " + reservations[host].displayName + " (" + reservations[host].emails[0] + ")";
+    } else {
+      button.columns[0].items[0].actions[0].data["action"] = "grab";
+      button.columns[0].items[0].actions[0].title = "grab";
+      button.columns[0].items[0].actions[0].style = "positive";
+      button.columns[1].items[0].color = "Good";
+      button.columns[1].items[0].text = host;
+    }
     card.body.push(button);
   }
 
