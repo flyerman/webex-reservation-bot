@@ -93,13 +93,16 @@ framework.hears(/help|what can i (do|say)|what (can|do) you do/i, function (bot,
 });
 
 
-/* The command "grab" will present the current list of reservations */
-framework.hears('grab', function (bot, trigger) {
-  console.log("someone asked for : " + trigger.text);
-  responded = true;
+function botReply(bot, origmessage, replymessage) {
+  if (origmessage) {
+    bot.reply(origmessage, replymessage, 'markdown');
+  } else {
+    bot.say(replymessage);
+  }
+}
 
-  let hostwanted = trigger.text.trim().split(" ").splice(-1)[0];
 
+function grabHost(bot, trigger, hostwanted) {
   // Check if the machine is already reserved
   let i = 0;
   for (let host of config.hostnames) {
@@ -110,10 +113,10 @@ framework.hears('grab', function (bot, trigger) {
     }
   }
   if (hostwanted in reservations) {
-      bot.reply(trigger.message,
-                "❌ `" + hostwanted + "` is already reserved by " + reservations[hostwanted].displayName + " (" + reservations[hostwanted].emails[0] + ")",
-                'markdown');
-      return;
+    botReply(bot,
+             trigger.message,
+             "❌ `" + hostwanted + "` is already reserved by " + reservations[hostwanted].displayName + " (" + reservations[hostwanted].emails[0] + ")");
+    return;
   }
 
   let list = "";
@@ -123,25 +126,29 @@ framework.hears('grab', function (bot, trigger) {
     if (hostwanted == host || i == hostwanted) {
       list += i.toString() + ". `"+ host + "` is reserved by " + trigger.person.displayName + " (" + trigger.person.emails[0] + ")\n";
       reservations[host] = trigger.person; 
-      bot.reply(trigger.message,
-                "✅ `" + host + "` is now reserved by " + trigger.person.displayName + " (" + trigger.person.emails[0] + ")\n",
-                'markdown');
+      botReply(bot,
+               trigger.message,
+               "✅ `" + host + "` is now reserved by " + trigger.person.displayName + " (" + trigger.person.emails[0] + ")\n");
       return;
     }
   }
 
-  bot.reply(trigger.message,
-            "❌ Could not find host `" + hostwanted + "`",
-            'markdown');
-});
+  botReply(bot, trigger.message, "❌ Could not find host `" + hostwanted + "`");  
+}
 
 
-/* The command "release" will remove a reservation */
-framework.hears('release', function (bot, trigger) {
-  console.log("someone asked for: " + trigger.text);
+/* The command "grab" will present the current list of reservations */
+framework.hears('grab', function (bot, trigger) {
+  console.log("someone asked for : " + trigger.text);
   responded = true;
 
   let hostwanted = trigger.text.trim().split(" ").splice(-1)[0];
+
+  grabHost(bot, trigger, hostwanted);
+});
+
+
+function releaseHost(bot, trigger, hostwanted) {
 
   // Check if the machine is reserved
   let i = 0;
@@ -154,19 +161,28 @@ framework.hears('release', function (bot, trigger) {
   }
   if (hostwanted in reservations) {
     delete reservations[hostwanted];
-    bot.reply(trigger.message,
-              "✅ `" + hostwanted + "` was made available again",
-              'markdown');
+    botReply(bot,
+             trigger.message,
+             "✅ `" + hostwanted + "` was made available again");
   } else if (config.hostnames.includes(hostwanted)) {
-    bot.reply(trigger.message,
-              "✅ `" + hostwanted + "` is already available",
-              'markdown');
+    botReply(bot,
+             trigger.message,
+             "✅ `" + hostwanted + "` is already available");
   } else {
-    bot.reply(trigger.message,
-              "❌ Could not find host `" + hostwanted + "`",
-              'markdown');
+    botReply(bot,
+             trigger.message,
+             "❌ Could not find host `" + hostwanted + "`");
+  }  
+}
 
-  }
+/* The command "release" will remove a reservation */
+framework.hears('release', function (bot, trigger) {
+  console.log("someone asked for: " + trigger.text);
+  responded = true;
+
+  let hostwanted = trigger.text.trim().split(" ").splice(-1)[0];
+
+  releaseHost(bot, trigger, hostwanted);
 });
 
 
@@ -375,6 +391,32 @@ framework.hears('menu', function (bot, trigger) {
   }
 
   bot.sendCard(card, 'Your webex client does not support ActiveCard. Get a new one!');
+});
+
+
+// Process a submitted card
+framework.on('attachmentAction', function (bot, trigger) {
+
+  //bot.say(`Got an attachmentAction:\n${JSON.stringify(trigger, null, 2)}`);
+
+  let payload = JSON.parse(JSON.stringify(trigger.attachmentAction));
+
+  if (payload.type != "submit") {
+    bot.say(`Unknown payload type '${payload.type}'`);
+    return;
+  }
+
+  if (payload.inputs["action"] == "release") {
+    releaseHost(bot, trigger, payload.inputs["hostname"]);
+    return;
+  }
+  
+  if (payload.inputs["action"] == "grab") {
+    grabHost(bot, trigger, payload.inputs["hostname"]);
+    return;
+  }
+
+  bot.say(`Unknown payload action '${payload.inputs["action"]}'`);
 });
 
 
