@@ -15,11 +15,17 @@ const config = require(configFile);
 
 const storeConfig = () => {
   try {
+    config.hostnames.sort()
     fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
   } catch (err) {
     console.error(err)
   }
 }
+
+if (!config.reservations) {
+  config["reservations"] = {}
+}
+storeConfig();
 
 // init framework
 var framework = new framework(config);
@@ -205,6 +211,7 @@ framework.hears('register', function (bot, trigger) {
               'markdown');
   } else {
     config.hostnames.push(hostwanted);
+    storeConfig();
     bot.reply(trigger.message,
               "✅ `" + hostwanted + "` was added to the list",
               'markdown');
