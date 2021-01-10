@@ -1,17 +1,17 @@
 // P4Bot Webex Bot implemented using the webex-node-bot-framework - https://www.npmjs.com/package/webex-node-bot-framework
 
-var framework = require('webex-node-bot-framework');
-var webhook = require('webex-node-bot-framework/webhook');
-var express = require('express');
-var bodyParser = require('body-parser');
+var framework = require('webex-node-bot-framework')
+var webhook = require('webex-node-bot-framework/webhook')
+var express = require('express')
+var bodyParser = require('body-parser')
 
-var app = express();
-app.use(bodyParser.json());
+var app = express()
+app.use(bodyParser.json())
 
 const fs = require('fs')
 
-let configFile = "./config.json";
-const config = require(configFile);
+let configFile = "./config.json"
+const config = require(configFile)
 
 const storeConfig = () => {
   try {
@@ -25,22 +25,22 @@ const storeConfig = () => {
 if (!config.reservations) {
   config["reservations"] = {}
 }
-storeConfig();
+storeConfig()
 
 // init framework
-var framework = new framework(config);
-framework.start();
-console.log("Starting framework, please wait...");
+var framework = new framework(config)
+framework.start()
+console.log("Starting framework, please wait...")
 
 
 framework.on('log', function(message) {
-    console.log(message);
-});
+    console.log(message)
+})
 
 
 framework.on("initialized", function () {
-  console.log("framework is all fired up! [Press CTRL-C to quit]");
-});
+  console.log("framework is all fired up! [Press CTRL-C to quit]")
+})
 
 
 // A spawn event is generated when the framework finds a space with your bot in it
@@ -50,28 +50,28 @@ framework.on('spawn', (bot, id, actorId) => {
   if (!actorId) {
     // don't say anything here or your bot's spaces will get
     // spammed every time your server is restarted
-    console.log(`While starting up, the framework found our bot in a space called: ${bot.room.title}`);
+    console.log(`While starting up, the framework found our bot in a space called: ${bot.room.title}`)
   } else {
     // When actorId is present it means someone added your bot got added to a new space
     // Lets find out more about them..
-    var msg = 'You can say `help` to get the list of words I am able to respond to.';
+    var msg = 'You can say `help` to get the list of words I am able to respond to.'
     bot.webex.people.get(actorId).then((user) => {
-      msg = `Hello there ${user.displayName}. ${msg}`;
+      msg = `Hello there ${user.displayName}. ${msg}`
     }).catch((e) => {
-      console.error(`Failed to lookup user details in framwork.on("spawn"): ${e.message}`);
-      msg = `Hello there. ${msg}`;
+      console.error(`Failed to lookup user details in framwork.on("spawn"): ${e.message}`)
+      msg = `Hello there. ${msg}`
     }).finally(() => {
       // Say hello, and tell users what you do!
       if (bot.isDirect) {
-        bot.say('markdown', msg);
+        bot.say('markdown', msg)
       } else {
-        let botName = bot.person.displayName;
-        msg += `\n\nDon't forget, in order for me to see your messages in this group space, be sure to *@mention* ${botName}.`;
-        bot.say('markdown', msg);
+        let botName = bot.person.displayName
+        msg += `\n\nDon't forget, in order for me to see your messages in this group space, be sure to *@mention* ${botName}.`
+        bot.say('markdown', msg)
       }
-    });
+    })
   }
-});
+})
 
 
 function sendHelp(bot) {
@@ -82,197 +82,197 @@ function sendHelp(bot) {
     '**register** HOSTNAME: will add HOSTNAME to the list.\n' +
     '**unregister** HOSTNAME: will remove HOSTNAME from the list.  You can also use the host number from the list command.\n' +
     '**list**: list the P4 machines and their reservations\n' +
-    '**help** (what you are reading now)');
+    '**help** (what you are reading now)')
 }
 
 
 //Process incoming messages
-let responded = false;
+let responded = false
 
 
 /* On mention with command
 ex User enters @botname help, the bot will write back in markdown
 */
 framework.hears(/help|what can i (do|say)|what (can|do) you do/i, function (bot, trigger) {
-  console.log(`someone needs help! They asked ${trigger.text}`);
-  responded = true;
+  console.log(`someone needs help! They asked ${trigger.text}`)
+  responded = true
   bot.say(`Hello ${trigger.person.displayName}.`)
     .then(() => sendHelp(bot))
-    .catch((e) => console.error(`Problem in help hander: ${e.message}`));
-});
+    .catch((e) => console.error(`Problem in help hander: ${e.message}`))
+})
 
 
 function botReply(bot, origmessage, replymessage) {
   if (origmessage) {
-    bot.reply(origmessage, replymessage, 'markdown');
+    bot.reply(origmessage, replymessage, 'markdown')
   } else {
-    bot.say(replymessage);
+    bot.say(replymessage)
   }
 }
 
 
 function grabHost(bot, trigger, hostwanted) {
   // Check if the machine is already reserved
-  let i = 0;
+  let i = 0
   for (let host of config.hostnames) {
-    i++;
+    i++
     if (i == hostwanted) {
-      hostwanted = host;
-      break;
+      hostwanted = host
+      break
     }
   }
   if (hostwanted in config.reservations) {
     botReply(bot,
              trigger.message,
-             "❌ `" + hostwanted + "` is already reserved by " + config.reservations[hostwanted].displayName + " (" + config.reservations[hostwanted].emails[0] + ")");
-    return;
+             "❌ `" + hostwanted + "` is already reserved by " + config.reservations[hostwanted].displayName + " (" + config.reservations[hostwanted].emails[0] + ")")
+    return
   }
 
-  let list = "";
-  i = 0;
+  let list = ""
+  i = 0
   for (let host of config.hostnames) {
-    i++;
+    i++
     if (hostwanted == host || i == hostwanted) {
-      list += i.toString() + ". `"+ host + "` is reserved by " + trigger.person.displayName + " (" + trigger.person.emails[0] + ")\n";
-      config.reservations[host] = trigger.person;
-      storeConfig();
+      list += i.toString() + ". `"+ host + "` is reserved by " + trigger.person.displayName + " (" + trigger.person.emails[0] + ")\n"
+      config.reservations[host] = trigger.person
+      storeConfig()
       botReply(bot,
                trigger.message,
-               "✅ `" + host + "` is now reserved by " + trigger.person.displayName + " (" + trigger.person.emails[0] + ")\n");
-      return;
+               "✅ `" + host + "` is now reserved by " + trigger.person.displayName + " (" + trigger.person.emails[0] + ")\n")
+      return
     }
   }
 
-  botReply(bot, trigger.message, "❌ Could not find host `" + hostwanted + "`");
+  botReply(bot, trigger.message, "❌ Could not find host `" + hostwanted + "`")
 }
 
 
 /* The command "grab" will present the current list of reservations */
 framework.hears('grab', function (bot, trigger) {
-  console.log("someone asked for : " + trigger.text);
-  responded = true;
+  console.log("someone asked for : " + trigger.text)
+  responded = true
 
-  let hostwanted = trigger.text.trim().split(" ").splice(-1)[0];
+  let hostwanted = trigger.text.trim().split(" ").splice(-1)[0]
 
-  grabHost(bot, trigger, hostwanted);
-});
+  grabHost(bot, trigger, hostwanted)
+})
 
 
 function releaseHost(bot, trigger, hostwanted) {
 
   // Check if the machine is reserved
-  let i = 0;
+  let i = 0
   for (let host of config.hostnames) {
-    i++;
+    i++
     if (i == hostwanted) {
-      hostwanted = host;
-      break;
+      hostwanted = host
+      break
     }
   }
   if (hostwanted in config.reservations) {
-    delete config.reservations[hostwanted];
-    storeConfig();
+    delete config.reservations[hostwanted]
+    storeConfig()
     botReply(bot,
              trigger.message,
-             "✅ `" + hostwanted + "` was made available again");
+             "✅ `" + hostwanted + "` was made available again")
   } else if (config.hostnames.includes(hostwanted)) {
     botReply(bot,
              trigger.message,
-             "✅ `" + hostwanted + "` is already available");
+             "✅ `" + hostwanted + "` is already available")
   } else {
     botReply(bot,
              trigger.message,
-             "❌ Could not find host `" + hostwanted + "`");
+             "❌ Could not find host `" + hostwanted + "`")
   }
 }
 
 /* The command "release" will remove a reservation */
 framework.hears('release', function (bot, trigger) {
-  console.log("someone asked for: " + trigger.text);
-  responded = true;
+  console.log("someone asked for: " + trigger.text)
+  responded = true
 
-  let hostwanted = trigger.text.trim().split(" ").splice(-1)[0];
+  let hostwanted = trigger.text.trim().split(" ").splice(-1)[0]
 
-  releaseHost(bot, trigger, hostwanted);
-});
+  releaseHost(bot, trigger, hostwanted)
+})
 
 
 /* The command "register" will add a new host */
 framework.hears('register', function (bot, trigger) {
-  console.log("someone asked for: " + trigger.text);
-  responded = true;
+  console.log("someone asked for: " + trigger.text)
+  responded = true
 
-  let hostwanted = trigger.text.trim().split(" ").splice(-1)[0];
+  let hostwanted = trigger.text.trim().split(" ").splice(-1)[0]
 
   // Check if the machine already exists
   if (config.hostnames.includes(hostwanted)) {
     bot.reply(trigger.message,
               "❌ `" + hostwanted + "` is already in the list",
-              'markdown');
+              'markdown')
   } else {
-    config.hostnames.push(hostwanted);
-    storeConfig();
+    config.hostnames.push(hostwanted)
+    storeConfig()
     bot.reply(trigger.message,
               "✅ `" + hostwanted + "` was added to the list",
-              'markdown');
+              'markdown')
   }
-});
+})
 
 
 /* The command "unregister" will remove a host */
 framework.hears('unregister', function (bot, trigger) {
-  console.log("someone asked for: " + trigger.text);
-  responded = true;
+  console.log("someone asked for: " + trigger.text)
+  responded = true
 
-  let hostwanted = trigger.text.trim().split(" ").splice(-1)[0];
+  let hostwanted = trigger.text.trim().split(" ").splice(-1)[0]
 
-  let i = 0;
+  let i = 0
   for (let host of config.hostnames) {
-    i++;
+    i++
     if (i == hostwanted) {
-      hostwanted = host;
-      break;
+      hostwanted = host
+      break
     }
   }
 
   if (config.hostnames.includes(hostwanted)) {
-    config.hostnames = config.hostnames.filter(item => item !== hostwanted);
+    config.hostnames = config.hostnames.filter(item => item !== hostwanted)
     if (hostwanted in config.reservations) {
-        delete config.reservations[hostwanted];
-        storeConfig();
+        delete config.reservations[hostwanted]
+        storeConfig()
     }
     bot.reply(trigger.message,
               "✅ `" + hostwanted + "` was removed from the list",
-              'markdown');
+              'markdown')
   } else {
     bot.reply(trigger.message,
               "❌ Could not find host `" + hostwanted + "`",
-              'markdown');
+              'markdown')
   }
-});
+})
 
 
 /* The command list the current reservations: */
 framework.hears('list', function (bot, trigger) {
-  console.log("someone asked for list");
-  responded = true;
+  console.log("someone asked for list")
+  responded = true
 
-  let list = "";
-  let i = 0;
+  let list = ""
+  let i = 0
   for (let host of config.hostnames) {
-    i++;
-    list += i.toString() + ". `"+ host + "` is ";
+    i++
+    list += i.toString() + ". `"+ host + "` is "
     if (host in config.reservations) {
-      list += "reserved by " + config.reservations[host].displayName + " (" + config.reservations[host].emails[0] + ")\n";
+      list += "reserved by " + config.reservations[host].displayName + " (" + config.reservations[host].emails[0] + ")\n"
     } else {
-      list += "available\n";
+      list += "available\n"
     }
   }
 
   bot.reply(trigger.message,
     list,
-    'markdown');
-});
+    'markdown')
+})
 
 
 // Reserve card
@@ -323,7 +323,7 @@ let reserveCardJSON =
     ],
     "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
     "version": "1.2"
-};
+}
 
 let reserveButton =
 {
@@ -367,78 +367,78 @@ let reserveButton =
             "verticalContentAlignment": "Bottom"
         }
     ]
-};
+}
 
 
 function sendCard(bot, trigger) {
 
-  let card = JSON.parse(JSON.stringify(reserveCardJSON));
+  let card = JSON.parse(JSON.stringify(reserveCardJSON))
 
-  let avatar = trigger.person.avatar;
+  let avatar = trigger.person.avatar
   if (avatar) {
-      card.body[0].columns[0].items[0].url = avatar;
+      card.body[0].columns[0].items[0].url = avatar
   } else {
-      card.body[0].columns[0].items[0].url = "https://developer.webex.com/images/webex-teams-logo.png";
+      card.body[0].columns[0].items[0].url = "https://developer.webex.com/images/webex-teams-logo.png"
   }
 
   for (let host of config.hostnames) {
-    let button = JSON.parse(JSON.stringify(reserveButton));
-    button.columns[0].items[0].actions[0].data["hostname"] = host;
+    let button = JSON.parse(JSON.stringify(reserveButton))
+    button.columns[0].items[0].actions[0].data["hostname"] = host
     if (host in config.reservations) {
-      button.columns[0].items[0].actions[0].data["action"] = "release";
-      button.columns[0].items[0].actions[0].title = "release";
-      button.columns[0].items[0].actions[0].style = "destructive";
-      button.columns[1].items[0].color = "Attention";
-      button.columns[1].items[0].text = host + " is reserved by " + config.reservations[host].displayName + " (" + config.reservations[host].emails[0] + ")";
+      button.columns[0].items[0].actions[0].data["action"] = "release"
+      button.columns[0].items[0].actions[0].title = "release"
+      button.columns[0].items[0].actions[0].style = "destructive"
+      button.columns[1].items[0].color = "Attention"
+      button.columns[1].items[0].text = host + " is reserved by " + config.reservations[host].displayName + " (" + config.reservations[host].emails[0] + ")"
     } else {
-      button.columns[0].items[0].actions[0].data["action"] = "grab";
-      button.columns[0].items[0].actions[0].title = "grab";
-      button.columns[0].items[0].actions[0].style = "positive";
-      button.columns[1].items[0].color = "Good";
-      button.columns[1].items[0].text = host;
+      button.columns[0].items[0].actions[0].data["action"] = "grab"
+      button.columns[0].items[0].actions[0].title = "grab"
+      button.columns[0].items[0].actions[0].style = "positive"
+      button.columns[1].items[0].color = "Good"
+      button.columns[1].items[0].text = host
     }
-    card.body.push(button);
+    card.body.push(button)
   }
 
-  bot.sendCard(card, 'Your webex client does not support ActiveCard. Get a new one!');
+  bot.sendCard(card, 'Your webex client does not support ActiveCard. Get a new one!')
 }
 
 
 /* The command menu sends back a card with buttons to grab and release: */
 framework.hears('menu', function (bot, trigger) {
-  console.log("someone asked for the menu");
-  responded = true;
+  console.log("someone asked for the menu")
+  responded = true
 
-  sendCard(bot, trigger);
-});
+  sendCard(bot, trigger)
+})
 
 
 // Process a submitted card
 framework.on('attachmentAction', function (bot, trigger) {
 
-  //bot.say(`Got an attachmentAction:\n${JSON.stringify(trigger, null, 2)}`);
+  //bot.say(`Got an attachmentAction:\n${JSON.stringify(trigger, null, 2)}`)
 
-  let payload = JSON.parse(JSON.stringify(trigger.attachmentAction));
+  let payload = JSON.parse(JSON.stringify(trigger.attachmentAction))
 
   if (payload.type != "submit") {
-    bot.say(`Unknown payload type '${payload.type}'`);
-    return;
+    bot.say(`Unknown payload type '${payload.type}'`)
+    return
   }
 
   if (payload.inputs["action"] == "release") {
-    releaseHost(bot, trigger, payload.inputs["hostname"]);
-    sendCard(bot, trigger);
-    return;
+    releaseHost(bot, trigger, payload.inputs["hostname"])
+    sendCard(bot, trigger)
+    return
   }
 
   if (payload.inputs["action"] == "grab") {
-    grabHost(bot, trigger, payload.inputs["hostname"]);
-    sendCard(bot, trigger);
-    return;
+    grabHost(bot, trigger, payload.inputs["hostname"])
+    sendCard(bot, trigger)
+    return
   }
 
-  bot.say(`Unknown payload action '${payload.inputs["action"]}'`);
-});
+  bot.say(`Unknown payload action '${payload.inputs["action"]}'`)
+})
 
 
 /* On mention with unexpected bot command
@@ -447,35 +447,35 @@ framework.on('attachmentAction', function (bot, trigger) {
 framework.hears(/.*/, function (bot, trigger) {
   // This will fire for any input so only respond if we haven't already
   if (!responded) {
-    console.log(`catch-all handler fired for user input: ${trigger.text}`);
+    console.log(`catch-all handler fired for user input: ${trigger.text}`)
     bot.say(`Sorry, I don't know how to respond to "${trigger.text}"`)
       .then(() => sendHelp(bot))
-      .catch((e) => console.error(`Problem in the unexepected command hander: ${e.message}`));
+      .catch((e) => console.error(`Problem in the unexepected command hander: ${e.message}`))
   }
-  responded = false;
-});
+  responded = false
+})
 
 
 //Server config & housekeeping
 // Health Check
 app.get('/', function (req, res) {
-  res.send(`I'm alive.`);
-});
+  res.send(`I'm alive.`)
+})
 
 
-app.post('/', webhook(framework));
+app.post('/', webhook(framework))
 
 
 var server = app.listen(process.env.PORT, function () {
-  framework.debug('framework listening on port %s', process.env.PORT);
-});
+  framework.debug('framework listening on port %s', process.env.PORT)
+})
 
 
 // gracefully shutdown (ctrl-c)
 process.on('SIGINT', function () {
-  framework.debug('stoppping...');
-  server.close();
+  framework.debug('stoppping...')
+  server.close()
   framework.stop().then(function () {
-    process.exit();
-  });
-});
+    process.exit()
+  })
+})
