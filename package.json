@@ -1,34 +1,18 @@
 {
-  "name": "nodejs-cloud-run-hello-world",
+  "name": "p4bot",
   "version": "0.0.1",
-  "description": "Hello World application for Cloud Run",
+  "description": "Webex bot to reserve machines in the P4 lab",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "lint": "eslint **.js",
-    "fix": "eslint --fix *.js",
-    "test": "mocha test/*.test.js --check-leaks --timeout 5000"
+    "start": "node index.js"
   },
-  "author": "Google LLC",
-  "license": "0BSD",
+  "author": "Florent Guiliani",
   "engines": {
     "node": ">=11.14"
   },
   "dependencies": {
     "express": "^4.17.1",
-    "gcp-metadata": "^4.0.0",
-    "handlebars": "^4.7.4",
     "body-parser": "^1.15.2",
     "webex-node-bot-framework": "^2.3.1"
-  },
-  "devDependencies": {
-    "eslint": "7.14.0",
-    "eslint-config-prettier": "6.15.0",
-    "eslint-plugin-node": "11.1.0",
-    "eslint-plugin-prettier": "3.1.4",
-    "eslint-plugin-promise": "4.2.1",
-    "gaxios": "2.3.4",
-    "mocha": "8.2.1",
-    "prettier": "2.2.1"
   }
 }
