@@ -4,6 +4,8 @@ var framework = require('webex-node-bot-framework')
 var webhook = require('webex-node-bot-framework/webhook')
 var express = require('express')
 var bodyParser = require('body-parser')
+var luxon = require('luxon')
+const DateTime = require('luxon').DateTime
 
 var app = express()
 app.use(bodyParser.json())
@@ -111,6 +113,13 @@ function botReply(bot, origmessage, replymessage) {
 }
 
 
+function getDate() {
+  let localDate = luxon.DateTime.local()
+  let convertedDate = localDate.setZone("America/New_York")
+  return convertedDate.toFormat("ccc (L/d) 'at' h:mm a ZZZZ")
+}
+
+
 function grabHost(bot, trigger, hostwanted) {
   // Check if the machine is already reserved
   let i = 0
@@ -124,21 +133,20 @@ function grabHost(bot, trigger, hostwanted) {
   if (hostwanted in config.reservations) {
     botReply(bot,
              trigger.message,
-             "❌ `" + hostwanted + "` is already reserved by " + config.reservations[hostwanted].displayName + " (" + config.reservations[hostwanted].emails[0] + ")")
+             "❌ `" + hostwanted + "` is already reserved by " + config.reservations[hostwanted].displayName)
     return
   }
 
-  let list = ""
   i = 0
   for (let host of config.hostnames) {
     i++
     if (hostwanted == host || i == hostwanted) {
-      list += i.toString() + ". `"+ host + "` is reserved by " + trigger.person.displayName + " (" + trigger.person.emails[0] + ")\n"
       config.reservations[host] = trigger.person
+      config.reservations[host]["reservation_date"] = getDate()
       storeConfig()
       botReply(bot,
                trigger.message,
-               "✅ `" + host + "` is now reserved by " + trigger.person.displayName + " (" + trigger.person.emails[0] + ")\n")
+               "✅ `" + host + "` is now reserved by " + trigger.person.displayName)
       return
     }
   }
@@ -261,11 +269,11 @@ framework.hears(/list|l/i, function (bot, trigger) {
   let i = 0
   for (let host of config.hostnames) {
     i++
-    list += i.toString() + ". `"+ host + "` is "
+    list += i.toString() + ". `"+ host + "` "
     if (host in config.reservations) {
-      list += "reserved by " + config.reservations[host].displayName + " (" + config.reservations[host].emails[0] + ")\n"
+      list += "was reserved by " + config.reservations[host].displayName + " on " + config.reservations[host]["reservation_date"] + "\n"
     } else {
-      list += "available\n"
+      list += "is available\n"
     }
   }
 
