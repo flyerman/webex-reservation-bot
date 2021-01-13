@@ -34,7 +34,7 @@ console.log("Starting framework, please wait...")
 
 
 framework.on('log', function(message) {
-    console.log(message)
+  console.log(message)
 })
 
 
@@ -76,7 +76,7 @@ framework.on('spawn', (bot, id, actorId) => {
 
 function sendHelp(bot) {
   bot.say("markdown", 'These are the P4 commands I can respond to:', '\n' +
-    '**menu**: (WIP) present a card with buttons to reserve or release  a host.\n' +
+    '**menu**: present a card with buttons to reserve or release  a host.\n' +
     '**grab** HOSTNAME: will reserve HOSTNAME.  You can also use the host number from the list command.\n' +
     '**release** HOSTNAME: will release HOSTNAME.  You can also use the host number from the list command.\n' +
     '**register** HOSTNAME: will add HOSTNAME to the list.\n' +
