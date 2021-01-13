@@ -76,12 +76,12 @@ framework.on('spawn', (bot, id, actorId) => {
 
 function sendHelp(bot) {
   bot.say("markdown", 'These are the P4 commands I can respond to:', '\n' +
-    '**menu**: present a card with buttons to reserve or release  a host.\n' +
+    '**m|menu**: present a card with buttons to reserve or release  a host.\n' +
+    '**l|list**: list the P4 machines and their reservations\n' +
     '**g|grab** HOSTNAME: will reserve HOSTNAME.  You can also use the host number from the list command.\n' +
     '**r|release** HOSTNAME: will release HOSTNAME.  You can also use the host number from the list command.\n' +
     '**register** HOSTNAME: will add HOSTNAME to the list.\n' +
     '**unregister** HOSTNAME: will remove HOSTNAME from the list.  You can also use the host number from the list command.\n' +
-    '**list**: list the P4 machines and their reservations\n' +
     '**help** (what you are reading now)')
 }
 
@@ -253,7 +253,7 @@ framework.hears('unregister', function (bot, trigger) {
 
 
 /* The command list the current reservations: */
-framework.hears('list', function (bot, trigger) {
+framework.hears(/list|l/i, function (bot, trigger) {
   console.log("someone asked for list")
   responded = true
 
@@ -405,7 +405,7 @@ function sendCard(bot, trigger) {
 
 
 /* The command menu sends back a card with buttons to grab and release: */
-framework.hears('menu', function (bot, trigger) {
+framework.hears(/menu|m/i, function (bot, trigger) {
   console.log("someone asked for the menu")
   responded = true
 
