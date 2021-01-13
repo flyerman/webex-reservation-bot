@@ -290,9 +290,11 @@ let reserveCardJSON =
     "body": [
         {
             "type": "ColumnSet",
+            "spacing": "None",
             "columns": [
                 {
                     "type": "Column",
+                    "spacing": "None",
                     "items": [
                         {
                             "type": "Image",
@@ -306,6 +308,7 @@ let reserveCardJSON =
                 },
                 {
                     "type": "Column",
+                    "spacing": "None",
                     "items": [
                         {
                             "type": "TextBlock",
@@ -336,9 +339,11 @@ let reserveCardJSON =
 let reserveButton =
 {
     "type": "ColumnSet",
+    "spacing": "None",
     "columns": [
         {
             "type": "Column",
+            "spacing": "None",
             "items": [
                 {
                     "type": "ActionSet",
@@ -362,6 +367,7 @@ let reserveButton =
         },
         {
             "type": "Column",
+            "spacing": "None",
             "items": [
                 {
                     "type": "TextBlock",
@@ -371,7 +377,7 @@ let reserveButton =
                     "wrap": true
                 }
             ],
-            "width": "stretch",
+            "width": "auto",
             "verticalContentAlignment": "Bottom"
         }
     ]
@@ -397,7 +403,7 @@ function sendCard(bot, trigger) {
       button.columns[0].items[0].actions[0].title = "release"
       button.columns[0].items[0].actions[0].style = "destructive"
       button.columns[1].items[0].color = "Attention"
-      button.columns[1].items[0].text = host + " is reserved by " + config.reservations[host].displayName + " (" + config.reservations[host].emails[0] + ")"
+      button.columns[1].items[0].text = host + " was reserved by " + config.reservations[host].displayName + " on " + config.reservations[host]["reservation_date"]
     } else {
       button.columns[0].items[0].actions[0].data["action"] = "grab"
       button.columns[0].items[0].actions[0].title = "grab"
