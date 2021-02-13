@@ -472,12 +472,12 @@ framework.hears(/.*/, function (bot, trigger) {
 
 //Server config & housekeeping
 // Health Check
-app.get('/', function (req, res) {
+app.get(config.botURI, function (req, res) {
   res.send(`I'm alive.`)
 })
 
 
-app.post('/', webhook(framework))
+app.post(config.botURI, webhook(framework))
 
 
 var server = app.listen(process.env.PORT, function () {
