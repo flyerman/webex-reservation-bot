@@ -156,7 +156,7 @@ function grabHost(bot, trigger, hostwanted) {
 
 
 /* The command "grab" will present the current list of reservations */
-framework.hears(/^(grab|g)\b/i, function (bot, trigger) {
+framework.hears(/^(P4\w+ )?(grab|g)\b/i, function (bot, trigger) {
   console.log("someone asked for : " + trigger.text)
   responded = true
 
@@ -195,7 +195,7 @@ function releaseHost(bot, trigger, hostwanted) {
 }
 
 /* The command "release" will remove a reservation */
-framework.hears(/^(release|r)\b/i, function (bot, trigger) {
+framework.hears(/^(P4\w+ )?(release|r)\b/i, function (bot, trigger) {
   console.log("someone asked for: " + trigger.text)
   responded = true
 
@@ -261,7 +261,7 @@ framework.hears('unregister', function (bot, trigger) {
 
 
 /* The command list the current reservations: */
-framework.hears(/^(list|l)\b/i, function (bot, trigger) {
+framework.hears(/^(P4\w+ )?(list|l)\b/i, function (bot, trigger) {
   console.log("someone asked for list")
   responded = true
 
@@ -419,7 +419,7 @@ function sendCard(bot, trigger) {
 
 
 /* The command menu sends back a card with buttons to grab and release: */
-framework.hears(/^(menu|m)\b/i, function (bot, trigger) {
+framework.hears(/^(P4\w+ )?(menu|m)\b/i, function (bot, trigger) {
   console.log("someone asked for the menu")
   responded = true
 
