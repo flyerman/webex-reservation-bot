@@ -1,10 +1,26 @@
 {
-  "webhookUrl": "https://bot.example.com",
+  "webhookUrl": "https://bot.example.com/",
+  "botURI": "/",
   "token": "SKDJFSJDFKSKDJFKJSDFKJSDFJKDSJFJDSFJSDKFJKSDJFKSJDFKJSDKFJSDJFSDJFSDJFLKJSDFKJDSLKFJLKSDJFKSJFKSDJFLKSDJFK",
   "port": 443,
   "hostnames": [
-     "atlas-gen3-3",
-     "atlas-gen3-4",
-     "athenalb1-elarch2"
+    "athenalb1-elarch1",
+    "athenalb1-elarch2",
+    "athenalb1-elqa5",
+    "athenalb1-elqa6",
+    "athenalb1-elqa8",
+    "athenalb1-qa4",
+    "athenalb1-qa5",
+    "athenalb1-qa6",
+    "athenalb2-elarch1",
+    "athenalb2-qa4",
+    "athenalb2-qa6",
+    "atlas-gen3-3",
+    "atlas-gen3-4",
+    "atlas-gen4-2",
+    "atlas-gen4-3",
+    "atlas-gen4-4",
+    "hvnr101",
+    "ixsamdsmc"
   ]
 }
